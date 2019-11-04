@@ -46,7 +46,7 @@ namespace FinchControl_Starter
             // Description: Using a menu based interface, allows for the moderate control of the finch robot and its abilities.
             // Author: Robert Parons
             // Creation Date: 9/25/2019
-            // Last Modified: 10/30/2019
+            // Last Modified: 11/04/2019
             //
             // **************************************************
             Finch finchRobot = new Finch();
@@ -2225,16 +2225,16 @@ namespace FinchControl_Starter
                             commandParameters = DisplayGetCommandParameters();
                             break;
                         case ("2"):
-                            DisplayGetFinchCommands(commands);
+                            DisplayGetFinchCommands(commands, duration);
                             break;
                         case ("3"):
-                            DisplayFinchCommands(commands);
+                            DisplayFinchCommands(commands, duration);
                             break;
                         case ("4"):
-                            DisplayExecuteFinchCommands(finchRobot, commands, commandParameters);
+                            DisplayExecuteFinchCommands(finchRobot, commands, commandParameters, duration);
                             break;
                         case ("5"):
-                            DisplayRemoveFinchCommands(commands);
+                            DisplayRemoveFinchCommands(commands, duration);
                             break;
                         case ("6"):
                             toMainMenu = true;
@@ -2360,7 +2360,7 @@ namespace FinchControl_Starter
         /// Obtains all the users commands
         /// </summary>
         /// <param name="commands"></param>
-        static void DisplayGetFinchCommands(List<Command> commands)
+        static void DisplayGetFinchCommands(List<Command> commands, List<int> duration)
         {
             //
             // variable list
@@ -2371,11 +2371,16 @@ namespace FinchControl_Starter
             double throwaway;
             bool enteredNumber;
             string userResponse;
+            string[] splitUserResponse = new string[2];
+            int durationResponse;
+            bool validDurationResponse;
 
             DisplayHeader("Programming Commands");
 
             Console.WriteLine("We will now begin to add commands to the robot's command list.");
             Console.WriteLine("Simply type the command, with no spaces.");
+            Console.WriteLine("If you want to the command to last or wait a certain duration, please type its duration, in milliseconds, in after the command with a space between the two.");
+            Console.WriteLine("In doing so, please use the format COMMAND DURATION.");
             Console.WriteLine("Here is the list of commands:");
 
             //
@@ -2394,33 +2399,81 @@ namespace FinchControl_Starter
             {
                 //
                 // validation loop, makes sure that the user response is the same as an enumeration. 
+                // also checks to see if a duration is set, and that the duration, if input, is an integer.
                 //
                 do
                 {
                     Console.Write("Enter Command: ");
+
                     userResponse = Console.ReadLine().ToUpper();
-                    validAnswer = Enum.TryParse<Command>(userResponse, out command);
-                    enteredNumber = double.TryParse(userResponse, out throwaway);
-                    Console.WriteLine();
+                    splitUserResponse = userResponse.Split(' ');
 
+                    //
+                    // This set double checks that the users first input is a command.
+                    //
+                    validAnswer = Enum.TryParse<Command>(splitUserResponse[0], out command);
+                    enteredNumber = double.TryParse(splitUserResponse[0], out throwaway);
 
-                    if (!validAnswer)
+                    //
+                    // This first if,if/else tree is to check the user response, making sure that it is input correctly
+                    // In addition, checks the length of the user response, acting correctly depending on the users input.
+                    //
+                    if (splitUserResponse.Length > 2)
                     {
-                        Console.WriteLine("Please enter a valid command with no spaces, as seen above.");
+                        Console.WriteLine("Invalid command Length, please enter no more than 1 space.");
+                    }
+                    else if (splitUserResponse.Length == 1)
+                    {
+                        if (!validAnswer)
+                        {
+                            Console.WriteLine("Please enter a valid command as seen above.");
+                        }
+                        else
+                        {
+                            if (!enteredNumber)
+                            {
+                                commands.Add(command);
+                                duration.Add(0);
+                            }
+
+                            else
+                            {
+                                Console.WriteLine("Please do not enter a number by itself.");
+                            }
+
+                        }
                     }
                     else
                     {
-                        if (!enteredNumber)
-                        {
-                            commands.Add(command);
-                        }
+                        validDurationResponse = Int32.TryParse(splitUserResponse[1], out durationResponse);
 
+                        if (!validAnswer)
+                        {
+                            Console.WriteLine("Please enter a valid command as seen above.");
+                        }
                         else
                         {
-                            Console.WriteLine("Please do not enter a number.");
-                        }
+                            if (!enteredNumber)
+                            {
+                                if (validDurationResponse)
+                                {
+                                    commands.Add(command);
+                                    duration.Add(durationResponse);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Please either write a integer or nothing for the duration.");
+                                }
+                            }
 
+                            else
+                            {
+                                Console.WriteLine("Please do not enter a number by itself.");
+                            }
+
+                        }
                     }
+                    
 
                 } while (!validAnswer);
             }
@@ -2442,8 +2495,9 @@ namespace FinchControl_Starter
         /// Shows the user all of their commands they currently have.
         /// </summary>
         /// <param name="commands"></param>
-        static void DisplayFinchCommands(List<Command> commands)
+        static void DisplayFinchCommands(List<Command> commands, List<int> duration)
         {
+            int durationLength = 0;
             DisplayHeader("User Commands");
 
             Console.WriteLine("Here is the list of all your current commands for the robot in order:");
@@ -2452,6 +2506,14 @@ namespace FinchControl_Starter
             foreach (Command eachCommand in commands)
             {
                 Console.Write($"{eachCommand}, ");
+                if (duration[durationLength] != 0)
+                {
+                    Console.WriteLine($"{duration[durationLength]} milliseconds.");
+                }
+                else
+                {
+                    Console.WriteLine("No duration.");
+                }
             }
 
             DisplayContinuePrompt();
@@ -2463,7 +2525,7 @@ namespace FinchControl_Starter
         /// <param name="finchRobot"></param>
         /// <param name="commands"></param>
         /// <param name="commandParameters"></param>
-        static void DisplayExecuteFinchCommands(Finch finchRobot, List<Command> commands, (int motorSpeed, int ledBrightness, double waitSeconds) commandParameters)
+        static void DisplayExecuteFinchCommands(Finch finchRobot, List<Command> commands, (int motorSpeed, int ledBrightness, double waitSeconds) commandParameters, List<int> duration)
 
         {
             //
@@ -2585,7 +2647,7 @@ namespace FinchControl_Starter
                         for (int i = 0; i < currentLevels; i++)
                         {
                             finchRobot.setLED(i, i*2, i*2);
-                            finchRobot.noteOn(i * 100);
+                            finchRobot.noteOn(i * 85);
                             finchRobot.setMotors((int)currentLevels, (int)currentLevels * 2);
                         }
                         finchRobot.noteOff();
@@ -2620,7 +2682,7 @@ namespace FinchControl_Starter
         /// Clears the command list
         /// </summary>
         /// <param name="commands"></param>
-        static void DisplayRemoveFinchCommands(List<Command> commands)
+        static void DisplayRemoveFinchCommands(List<Command> commands, List<int> duration)
         {
             
             string userResponse;
