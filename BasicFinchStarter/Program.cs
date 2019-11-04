@@ -134,6 +134,10 @@ namespace FinchControl_Starter
         //
         #region LOGIN AND REGISTRATION METHODS
 
+        /// <summary>
+        /// Shows the menu and does methods upon user choice.
+        /// </summary>
+        /// <returns></returns>
         private static bool DisplayLoginRegisterOption()
         {
             bool proceedToProgram = false;
@@ -157,7 +161,7 @@ namespace FinchControl_Starter
                     else
                     {
                         //
-                        //Displays the menu, having options for numbers 1-4
+                        //Displays the menu, having options for numbers 1-3
                         //
                         DisplayHeader("Login and Registration Menu");
 
@@ -174,11 +178,6 @@ namespace FinchControl_Starter
                         Console.ForegroundColor = ConsoleColor.Cyan;
                         Console.Write("[3] ");
                         Console.ForegroundColor = ConsoleColor.White;
-                        Console.WriteLine("Admin Privledges");
-
-                        Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.Write("[4] ");
-                        Console.ForegroundColor = ConsoleColor.White;
                         Console.WriteLine("Quit");
                         Console.WriteLine();
                         Console.Write("Please enter the appropiate number to choose what program to run >> ");
@@ -186,7 +185,7 @@ namespace FinchControl_Starter
                         do
                         {
                             //
-                            //Executes the corresponding method for numbers 1-4, else it loops
+                            //Executes the corresponding method for numbers 1-3, else it loops
                             //
                             ConsoleKeyInfo userCharacter = Console.ReadKey();
                             userResponse = userCharacter.KeyChar.ToString();
@@ -200,21 +199,19 @@ namespace FinchControl_Starter
 
                                     break;
                                 case ("2"):
-                                    DisplayRegister();
+                                    validLogin = DisplayRegister(dataPath);
                                     break;
                                 case ("3"):
-                                    Console.WriteLine("Not Implemented yet");
-                                    break;
-                                case ("4"):
                                     continueProgram = true;
                                     DisplayContinuePrompt();
                                     break;
                                 default:
                                     Console.WriteLine();
-                                    Console.WriteLine("Please enter a number 1-4 in number form to goto the cooresponding menu.");
+                                    Console.WriteLine("Please enter a number 1-3 in number form to goto the cooresponding menu.");
                                     Console.Write("Enter the appropiate number to choose what menu to goto >> ");
                                     validResponse = false;
                                     break;
+
                             }
 
                         } while (!validResponse);
@@ -250,6 +247,8 @@ namespace FinchControl_Starter
             do
             {
                 userInput = Console.ReadLine().Split('|');
+
+                userInput[0] = userInput[0].ToLower();
 
                 loginSuccess = CompareAllLogins(dataPath, userInput);
 
@@ -288,11 +287,124 @@ namespace FinchControl_Starter
         /// Lets the user register a new username & password
         /// </summary>
         /// <returns></returns>
-        private static bool DisplayRegister()
+        private static bool DisplayRegister(string dataPath)
         {
+            //
+            // variables
+            //
             bool registered = false;
+            bool exitRegistration = false;
+            string userInput;
+            string[] arrayedUserInput;
+            string[] currentRegistrations;
+            string[] registrationSplit;
+            string errorOutput = "";
+            bool error;
 
             DisplayHeader("Register");
+
+            Console.WriteLine("This will allow you to register a new username and attached password.");
+            Console.WriteLine("Much like the login function, please enter the username and password seperated via a |, ie USERNAME|PASSWORD.");
+            Console.WriteLine("To exit the registration, please type in '~'.");
+
+
+            do
+            {
+
+                error = false;
+                Console.WriteLine();
+                Console.Write("Please enter your username & password >> ");
+
+                //
+                // if user types in a ~, it'll exit the program.
+                //
+                userInput = Console.ReadLine().Trim();
+                if (userInput == "~")
+                {
+                    Console.WriteLine("Exiting registration!");
+                    exitRegistration = true;
+                }
+                else
+                {
+
+                    currentRegistrations = ReadFromFile(dataPath);
+
+                    foreach (string eachLogin in currentRegistrations)
+                    {
+                        //
+                        // first tests to see if any perfect input is the same as any already registered.
+                        //
+                        if (userInput == eachLogin)
+                        {
+                            errorOutput = "Username and password combination already exists.";
+                            error = true;
+                        }
+                        else
+                        {
+                            arrayedUserInput = userInput.Split('|');
+                            arrayedUserInput[0] = arrayedUserInput[0].ToLower();
+                            registrationSplit = eachLogin.Split('|');
+                            registrationSplit[0] = registrationSplit[0].ToLower();
+
+                            //
+                            // Checks to see if the the user input is the correct length
+                            //
+                            if (arrayedUserInput.Length == 2)
+                            {
+                                //
+                                //Checks to see if the username exists with another password
+                                //also checks to see if the username/password 
+                                //
+                                if (arrayedUserInput[0] == registrationSplit[0])
+                                {
+                                    if (arrayedUserInput[1] == registrationSplit[1])
+                                    {
+                                        errorOutput = "Username and password combination already exists.";
+                                        error = true;
+                                    }
+                                    else
+                                    {
+                                        errorOutput = "Username already exists with another password.";
+                                        error = true;
+                                    }
+                                }
+                                else
+                                {
+                                    exitRegistration = true;
+                                }
+                            }
+                            else
+                            {
+                                errorOutput = "Incorrect format. Please use the format of USERNAME|PASSWORD.";
+                                error = true;
+                            }
+                        }
+                    }
+
+                    //
+                    // If there is no errors, it'll output nothing
+                    // Also clears the error output incase the next input is a good registration
+                    //
+                    Console.WriteLine(errorOutput);
+                    errorOutput = "";
+                }
+            } while (!exitRegistration || error);
+
+            if (userInput == "~")
+            { }
+            else
+            {
+
+                File.AppendAllText(dataPath, Environment.NewLine);
+                File.AppendAllText(dataPath, userInput);
+
+                arrayedUserInput = userInput.Split('|');
+
+                Console.WriteLine($"Welcome to the program, {arrayedUserInput[0]}!");
+                registered = true;
+            }
+
+            DisplayContinuePrompt();
 
             return registered;
         }
@@ -304,21 +416,25 @@ namespace FinchControl_Starter
         /// <returns></returns>
         private static bool CompareAllLogins(string dataPath, string[] userInput)
         {
+            //
+            // variables
+            //
             string[] loginList;
             bool userMatch = false;
             string[] pass;
             int usernameFound = 0;
 
-            loginList = File.ReadAllLines(dataPath);
+            loginList = ReadFromFile(dataPath);
 
             //
-            //Makes sure the user input via XX|XX, otherwise it doesn't bother to check.
+            //Makes sure the user input via XX|XX, otherwise it doesn't bother to check all the logins.
             //
             if (userInput.Length == 2)
             {
                 foreach (string eachLogin in loginList)
                 {
-                pass = eachLogin.Split('|');
+                    pass = eachLogin.Split('|');
+                    pass[0] = pass[0].ToLower();
 
                     if (userInput[0] == pass[0])
                     {
@@ -343,7 +459,19 @@ namespace FinchControl_Starter
             return userMatch;
         }
 
-        
+        /// <summary>
+        /// Gives all the outputs from the given datapath
+        /// </summary>
+        /// <param name="dataPath"></param>
+        /// <returns></returns>
+        static string[] ReadFromFile(string dataPath)
+        {
+            string[] loginList;
+
+            loginList = File.ReadAllLines(dataPath);
+
+            return loginList;
+        }
 
         #endregion
 
