@@ -2231,13 +2231,14 @@ namespace FinchControl_Starter
                             DisplayGetFinchCommands(commandAndDuration);
                             break;
                         case ("3"):
-                            DisplayFinchCommands(commandAndDuration);
+                            DisplayFinchCommands(commandAndDuration, commandParameters);
                             break;
                         case ("4"):
                             if (commandParameters.motorSpeed == 0)
                             {
                                 Console.WriteLine();
                                 Console.WriteLine("Your motor speed is set at 0. Please set a non-zero motor speed in 'Set Command Parameters'");
+                                DisplayContinuePrompt();
                             }
                             else
                             {
@@ -2288,6 +2289,7 @@ namespace FinchControl_Starter
 
             DisplayContinuePrompt();
 
+            Console.WriteLine();
             Console.Write("Please enter the speed of the motors >> ");
             
             //
@@ -2297,7 +2299,7 @@ namespace FinchControl_Starter
             {
                 validAnswer = Int32.TryParse(Console.ReadLine(), out commandParameters.motorSpeed);
 
-                if (commandParameters.motorSpeed > 255 || commandParameters.motorSpeed < 0 || !validAnswer)
+                if (commandParameters.motorSpeed > 255 || commandParameters.motorSpeed <= 0 || !validAnswer)
                 {
                     Console.WriteLine("Invalid Response.");
                     Console.Write("Please enter a whole number between 0 and 255 >> ");
@@ -2305,6 +2307,7 @@ namespace FinchControl_Starter
                 }
                 else
                 {
+                    Console.WriteLine();
                     Console.WriteLine($"The motor speed will be {commandParameters.motorSpeed}.");
                 }
 
@@ -2322,7 +2325,7 @@ namespace FinchControl_Starter
             {
                 validAnswer = Int32.TryParse(Console.ReadLine(), out commandParameters.ledBrightness);
 
-                if (commandParameters.ledBrightness > 255 || commandParameters.ledBrightness < 0 || !validAnswer)
+                if (commandParameters.ledBrightness > 255 || commandParameters.ledBrightness <= 0 || !validAnswer)
                 {
                     Console.WriteLine("Invalid Response.");
                     Console.Write("Please enter a whole number between 0 and 255 >> ");
@@ -2330,6 +2333,7 @@ namespace FinchControl_Starter
                 }
                 else
                 {
+                    Console.WriteLine();
                     Console.WriteLine($"The LED brightness will be {commandParameters.ledBrightness}.");
                 }
 
@@ -2354,6 +2358,7 @@ namespace FinchControl_Starter
                 }
                 else
                 {
+                    Console.WriteLine();
                     Console.WriteLine($"The wait period for the wait command will be {commandParameters.waitSeconds} seconds.");
                 }
 
@@ -2507,7 +2512,7 @@ namespace FinchControl_Starter
         /// Shows the user all of their commands they currently have.
         /// </summary>
         /// <param name="commands"></param>
-        static void DisplayFinchCommands((List<Command> commands, List<int> duration) commandAndDuration)
+        static void DisplayFinchCommands((List<Command> commands, List<int> duration) commandAndDuration, (int motorSpeed, int ledBrightness, double waitSeconds) commandParameters)
         {
 
             //
@@ -2516,6 +2521,16 @@ namespace FinchControl_Starter
             int durationLength = 0;
             DisplayHeader("User Commands");
 
+            Console.WriteLine("Here is your current command parameters:");
+            Console.WriteLine();
+
+            //
+            // Shows the user their command parameters
+            //
+            Console.WriteLine($"The motor speed is {commandParameters.motorSpeed}.");
+            Console.WriteLine($"The LED Brightness is {commandParameters.ledBrightness}.");
+            Console.WriteLine($"The time of the wait command, in seconds, is {commandParameters.waitSeconds}.");
+            Console.WriteLine();
             Console.WriteLine("Here is the list of all your current commands for the robot in order:");
             Console.WriteLine();
 
