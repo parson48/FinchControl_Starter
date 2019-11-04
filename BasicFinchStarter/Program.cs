@@ -12,6 +12,7 @@ namespace FinchControl_Starter
     {
         //
         // List of all the "user programming" commands
+        // Make sure to keep none and done as the first and last, respectively
         //
         public enum Command
         {
@@ -1679,6 +1680,7 @@ namespace FinchControl_Starter
 
             } while (!validAnswer);
             Console.WriteLine("The maximum duration of the alarm test will be {0} seconds.", seconds);
+            Console.WriteLine($"This will take a maximum of {(seconds * 2) + 1} readings.");
 
             DisplayContinuePrompt();
 
@@ -2166,6 +2168,7 @@ namespace FinchControl_Starter
 
             List<Command> commands = new List<Command>();
             List<int> duration = new List<int>();
+           //(List<Command> commands, List<int> duraton) co;
 
             DisplayHeader("User Programming");
             Console.WriteLine("Welcome to User Programming! This module allows you to semi-control the robot using a custom made language!");
@@ -2498,10 +2501,10 @@ namespace FinchControl_Starter
         /// <param name="commands"></param>
         static void DisplayFinchCommands(List<Command> commands, List<int> duration)
         {
+
             //
             // duration length increases by 1, and shows the duration of a command whenever it exists.
             //
-
             int durationLength = 0;
             DisplayHeader("User Commands");
 
@@ -2540,7 +2543,7 @@ namespace FinchControl_Starter
             double currentLevels;
 
             //
-            // duration length increases by 1, and shows the duration of a command whenever it exists.
+            // duration length increases by 1, and allows the robot to wait the correct time.
             //
             int durationLength = 0;
 
