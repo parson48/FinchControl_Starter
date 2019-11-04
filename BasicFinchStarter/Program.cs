@@ -2371,7 +2371,7 @@ namespace FinchControl_Starter
             double throwaway;
             bool enteredNumber;
             string userResponse;
-            string[] splitUserResponse = new string[2];
+            string[] splitUserResponse;
             int durationResponse;
             bool validDurationResponse;
 
@@ -2381,6 +2381,7 @@ namespace FinchControl_Starter
             Console.WriteLine("Simply type the command, with no spaces.");
             Console.WriteLine("If you want to the command to last or wait a certain duration, please type its duration, in milliseconds, in after the command with a space between the two.");
             Console.WriteLine("In doing so, please use the format COMMAND DURATION.");
+            Console.WriteLine();
             Console.WriteLine("Here is the list of commands:");
 
             //
@@ -2438,7 +2439,7 @@ namespace FinchControl_Starter
 
                             else
                             {
-                                Console.WriteLine("Please do not enter a number by itself.");
+                                Console.WriteLine("Please do not enter a number for the command.");
                             }
 
                         }
@@ -2468,7 +2469,7 @@ namespace FinchControl_Starter
 
                             else
                             {
-                                Console.WriteLine("Please do not enter a number by itself.");
+                                Console.WriteLine("Please do not enter a number for the command.");
                             }
 
                         }
@@ -2497,6 +2498,10 @@ namespace FinchControl_Starter
         /// <param name="commands"></param>
         static void DisplayFinchCommands(List<Command> commands, List<int> duration)
         {
+            //
+            // duration length increases by 1, and shows the duration of a command whenever it exists.
+            //
+
             int durationLength = 0;
             DisplayHeader("User Commands");
 
@@ -2514,6 +2519,7 @@ namespace FinchControl_Starter
                 {
                     Console.WriteLine("No duration.");
                 }
+                durationLength++;
             }
 
             DisplayContinuePrompt();
@@ -2532,6 +2538,11 @@ namespace FinchControl_Starter
             //temp variable for display commands
             //
             double currentLevels;
+
+            //
+            // duration length increases by 1, and shows the duration of a command whenever it exists.
+            //
+            int durationLength = 0;
 
             DisplayHeader("Finch Display of Commands");
 
@@ -2558,63 +2569,75 @@ namespace FinchControl_Starter
                     case Command.MOVEFORWARD:
                         Console.WriteLine(command);
                         finchRobot.setMotors(commandParameters.motorSpeed, commandParameters.motorSpeed);
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.MOVEBACKWARDS:
                         Console.WriteLine(command);
                         finchRobot.setMotors(-commandParameters.motorSpeed, -commandParameters.motorSpeed);
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.STOPMOTORS:
                         Console.WriteLine(command);
                         finchRobot.setMotors(0, 0);
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.WAIT:
                         Console.WriteLine(command);
                         finchRobot.wait((int)(commandParameters.waitSeconds * 1000));
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.TURNRIGHT:
                         Console.WriteLine(command);
                         finchRobot.setMotors(commandParameters.motorSpeed, 0);
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.TURNLEFT:
                         Console.WriteLine(command);
                         finchRobot.setMotors(0, commandParameters.motorSpeed);
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.LEDON:
                         Console.WriteLine(command);
                         finchRobot.setLED(commandParameters.ledBrightness, commandParameters.ledBrightness, commandParameters.ledBrightness);
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.LEDOFF:
                         Console.WriteLine(command);
                         finchRobot.setLED(0, 0, 0);
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.GETCURRENTLIGHT:
                         Console.Write(command);
                         currentLevels = GetCurrentAmbientXLevels("Light", finchRobot);
                         Console.WriteLine($"  Current Light Level - {currentLevels}");
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.GETCURRENTTEMP:
                         Console.Write(command);
                         currentLevels = GetCurrentAmbientXLevels("Temperature", finchRobot);
                         Console.WriteLine($"  Current Temperature Level - {currentLevels}");
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.NOTEON:
                         Console.WriteLine(command);
                         finchRobot.noteOn((commandParameters.motorSpeed * commandParameters.ledBrightness));
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                     case Command.NOTEOFF:
                         Console.WriteLine(command);
                         finchRobot.noteOff();
+                        finchRobot.wait(duration[durationLength]);
                         break;
 
                         //
@@ -2667,7 +2690,9 @@ namespace FinchControl_Starter
                     default:
                         break;
 
-                }                
+                }
+
+                durationLength++;
             }
 
             Console.WriteLine("The robot has completed your commands!");
@@ -2689,11 +2714,12 @@ namespace FinchControl_Starter
 
             DisplayHeader("Clearing Command List");
 
-            Console.WriteLine("We will now clear the command list. If you would like to keep your commands, please press 1. Otherwise, press any key to continue with the clearing.");
+            Console.WriteLine("We will now clear the command list. This includes the duration list");
+            Console.WriteLine("If you would like to keep your commands, please press 1. Otherwise, press any key to continue with the clearing.");
 
             //
             // Reads the users input.
-            // if 1, it goes back to programming menu, else it wipes the list clean.
+            // if 1, it goes back to programming menu, else it wipes the lists clean.
             //
             ConsoleKeyInfo userCharacter = Console.ReadKey();
             userResponse = userCharacter.KeyChar.ToString();
@@ -2708,7 +2734,7 @@ namespace FinchControl_Starter
                 Console.WriteLine();
                 Console.WriteLine("We are now clearing the command list.");
                 commands.Clear();
-
+                duration.Clear();
             }
 
             DisplayContinuePrompt();
